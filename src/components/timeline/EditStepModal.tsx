@@ -20,7 +20,10 @@ interface EditStepModalProps {
   onDelete: (stepId: string) => Promise<boolean>;
 }
 
+import { useSettings } from '../../hooks/useSettings';
+
 export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onClose, onSave, onDelete }) => {
+  const { agencies, sectors, loading: settingsLoading, addAgency, addSector } = useSettings();
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -38,9 +41,9 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
   const [startDate, setStartDate] = useState('');
   const [completionForecast, setCompletionForecast] = useState('');
 
-  // Dropdown Options
-  const agencies = ['Prefeitura', 'Estado', 'Governo Federal', 'Empresa Privada', 'Outro'];
-  const sectors = ['Obras', 'Planejamento', 'Finanças', 'Jurídico', 'Meio Ambiente', 'Outro'];
+  // Dropdown Options removed - now using useSettings hook
+  // const agencies = ['Prefeitura', 'Estado', 'Governo Federal', 'Empresa Privada', 'Outro'];
+  // const sectors = ['Obras', 'Planejamento', 'Finanças', 'Jurídico', 'Meio Ambiente', 'Outro'];
 
   // Confirmation Delete State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -84,8 +87,19 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
 
     setLoading(true);
     
-    const finalAgency = responsibleAgency === 'Outro' ? customAgency : responsibleAgency;
-    const finalSector = responsibleSector === 'Outro' ? customSector : responsibleSector;
+    let finalAgency = responsibleAgency;
+    let finalSector = responsibleSector;
+
+    // Handle "Outro" case - create new record
+    if (responsibleAgency === 'Outro' && customAgency.trim()) {
+      await addAgency(customAgency);
+      finalAgency = customAgency;
+    }
+
+    if (responsibleSector === 'Outro' && customSector.trim()) {
+      await addSector(customSector);
+      finalSector = customSector;
+    }
 
     const success = await onSave(step.id, {
       title,
@@ -220,10 +234,12 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
                     <select
                       value={responsibleAgency}
                       onChange={(e) => setResponsibleAgency(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+                      disabled={settingsLoading}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white disabled:opacity-50"
                     >
                       <option value="">Selecione...</option>
-                      {agencies.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      {agencies.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
+                      <option value="Outro">Outro (Adicionar Novo)</option>
                     </select>
                     {responsibleAgency === 'Outro' && (
                       <input
@@ -231,7 +247,7 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
                         value={customAgency}
                         onChange={(e) => setCustomAgency(e.target.value)}
                         className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        placeholder="Especifique o órgão"
+                        placeholder="Nome do novo órgão"
                       />
                     )}
                   </div>
@@ -240,10 +256,12 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
                     <select
                       value={responsibleSector}
                       onChange={(e) => setResponsibleSector(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+                      disabled={settingsLoading}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white disabled:opacity-50"
                     >
                       <option value="">Selecione...</option>
-                      {sectors.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      {sectors.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
+                      <option value="Outro">Outro (Adicionar Novo)</option>
                     </select>
                     {responsibleSector === 'Outro' && (
                       <input
@@ -251,7 +269,7 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
                         value={customSector}
                         onChange={(e) => setCustomSector(e.target.value)}
                         className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        placeholder="Especifique o setor"
+                        placeholder="Nome do novo setor"
                       />
                     )}
                   </div>
