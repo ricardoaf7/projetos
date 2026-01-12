@@ -177,5 +177,76 @@ export const useProject = (id: string | undefined) => {
     }
   };
 
-  return { project, loading, error, addStep };
+  const updateStep = async (stepId: string, updates: {
+    title?: string;
+    status?: 'pending' | 'in-progress' | 'completed';
+    topAnnotation?: string;
+    bottomAnnotation?: string;
+  }): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('project_steps')
+        .update({
+          title: updates.title,
+          status: updates.status,
+          top_annotation: updates.topAnnotation,
+          bottom_annotation: updates.bottomAnnotation
+        })
+        .eq('id', stepId);
+
+      if (error) throw error;
+      fetchProject();
+      return true;
+    } catch (err: any) {
+      console.error('Error updating step:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  const deleteStep = async (stepId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('project_steps')
+        .delete()
+        .eq('id', stepId);
+
+      if (error) throw error;
+      fetchProject();
+      return true;
+    } catch (err: any) {
+      console.error('Error deleting step:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  const reorderSteps = async (orderedStepIds: string[]): Promise<boolean> => {
+    try {
+      // Create updates for each step with new order_index
+      const updates = orderedStepIds.map((id, index) => ({
+        id,
+        project_id: project?.id, // Required for upsert in some cases, good practice
+        order_index: index + 1
+      }));
+
+      // Supabase upsert can handle bulk updates if we include primary keys
+      const { error } = await supabase
+        .from('project_steps')
+        .upsert(updates, { onConflict: 'id' }); // Only update existing rows
+
+      if (error) throw error;
+      
+      // Optimistically update local state or refetch
+      // For now, refetch to be safe
+      fetchProject();
+      return true;
+    } catch (err: any) {
+      console.error('Error reordering steps:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  return { project, loading, error, addStep, updateStep, deleteStep, reorderSteps };
 };

@@ -4,14 +4,17 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, User, FileText, Plus } from 'lucide-react';
 import { Timeline } from '../components/timeline/Timeline';
 import { AddStepModal } from '../components/timeline/AddStepModal';
+import { EditStepModal } from '../components/timeline/EditStepModal';
 import { useProject } from '../hooks/useProjects';
+import { TimelineStep } from '../types';
 
 export const ProjectDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isAddStepModalOpen, setIsAddStepModalOpen] = useState(false);
+  const [editingStep, setEditingStep] = useState<TimelineStep | null>(null);
   
-  const { project, loading, error, addStep } = useProject(id);
+  const { project, loading, error, addStep, updateStep, deleteStep, reorderSteps } = useProject(id);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -110,7 +113,11 @@ export const ProjectDetails: React.FC = () => {
           </div>
 
           <div className="bg-slate-50/50">
-            <Timeline steps={project.steps} />
+            <Timeline 
+              steps={project.steps} 
+              onStepClick={setEditingStep}
+              onReorder={reorderSteps}
+            />
           </div>
         </section>
 
@@ -118,6 +125,14 @@ export const ProjectDetails: React.FC = () => {
           isOpen={isAddStepModalOpen}
           onClose={() => setIsAddStepModalOpen(false)}
           onSave={addStep}
+        />
+
+        <EditStepModal
+          isOpen={!!editingStep}
+          step={editingStep}
+          onClose={() => setEditingStep(null)}
+          onSave={updateStep}
+          onDelete={deleteStep}
         />
 
         {/* Current Step Details */}
