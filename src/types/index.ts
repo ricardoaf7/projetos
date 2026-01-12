@@ -7,6 +7,10 @@ export interface TimelineStep {
   topAnnotation?: string;
   bottomAnnotation?: string;
   isCurrent?: boolean;
+  responsibleAgency?: string;
+  responsibleSector?: string;
+  startDate?: string;
+  completionForecast?: string;
 }
 
 export interface Project {

@@ -43,6 +43,10 @@ export const useProjects = () => {
             isCurrent: s.is_current,
             topAnnotation: s.top_annotation || undefined,
             bottomAnnotation: s.bottom_annotation || undefined,
+            responsibleAgency: s.responsible_agency || undefined,
+            responsibleSector: s.responsible_sector || undefined,
+            startDate: s.start_date || undefined,
+            completionForecast: s.completion_forecast || undefined,
           })) || [];
 
         return {
@@ -105,20 +109,24 @@ export const useProject = (id: string | undefined) => {
       if (stepsError) throw stepsError;
 
       const formattedProject: Project = {
-        id: projectData.id,
-        title: projectData.title,
-        description: projectData.description,
-        progress: projectData.progress,
-        imageUrl: projectData.image_url || undefined,
-        steps: stepsData.map(s => ({
-          id: s.id,
-          title: s.title,
-          status: s.status,
-          isCurrent: s.is_current,
-          topAnnotation: s.top_annotation || undefined,
-          bottomAnnotation: s.bottom_annotation || undefined,
-        })),
-        currentStepDetails: projectData.current_responsible ? {
+          id: projectData.id,
+          title: projectData.title,
+          description: projectData.description,
+          progress: projectData.progress,
+          imageUrl: projectData.image_url || undefined,
+          steps: stepsData.map(s => ({
+            id: s.id,
+            title: s.title,
+            status: s.status,
+            isCurrent: s.is_current,
+            topAnnotation: s.top_annotation || undefined,
+            bottomAnnotation: s.bottom_annotation || undefined,
+            responsibleAgency: s.responsible_agency || undefined,
+            responsibleSector: s.responsible_sector || undefined,
+            startDate: s.start_date || undefined,
+            completionForecast: s.completion_forecast || undefined,
+          })),
+          currentStepDetails: projectData.current_responsible ? {
           responsible: projectData.current_responsible,
           deadline: projectData.current_deadline,
           notes: projectData.current_notes
@@ -144,6 +152,10 @@ export const useProject = (id: string | undefined) => {
     status: 'pending' | 'in-progress' | 'completed';
     topAnnotation?: string;
     bottomAnnotation?: string;
+    responsibleAgency?: string;
+    responsibleSector?: string;
+    startDate?: string;
+    completionForecast?: string;
   }): Promise<boolean> => {
     if (!id || !project) return false;
 
@@ -161,6 +173,10 @@ export const useProject = (id: string | undefined) => {
           status: stepData.status,
           top_annotation: stepData.topAnnotation,
           bottom_annotation: stepData.bottomAnnotation,
+          responsible_agency: stepData.responsibleAgency,
+          responsible_sector: stepData.responsibleSector,
+          start_date: stepData.startDate,
+          completion_forecast: stepData.completionForecast,
           order_index: maxOrder + 1,
           is_current: false // Default to false
         }]);
@@ -182,6 +198,10 @@ export const useProject = (id: string | undefined) => {
     status?: 'pending' | 'in-progress' | 'completed';
     topAnnotation?: string;
     bottomAnnotation?: string;
+    responsibleAgency?: string;
+    responsibleSector?: string;
+    startDate?: string;
+    completionForecast?: string;
   }): Promise<boolean> => {
     try {
       const { error } = await supabase
@@ -190,7 +210,11 @@ export const useProject = (id: string | undefined) => {
           title: updates.title,
           status: updates.status,
           top_annotation: updates.topAnnotation,
-          bottom_annotation: updates.bottomAnnotation
+          bottom_annotation: updates.bottomAnnotation,
+          responsible_agency: updates.responsibleAgency,
+          responsible_sector: updates.responsibleSector,
+          start_date: updates.startDate,
+          completion_forecast: updates.completionForecast
         })
         .eq('id', stepId);
 

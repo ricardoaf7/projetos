@@ -19,24 +19,57 @@ export const AddStepModal: React.FC<AddStepModalProps> = ({ isOpen, onClose, onS
   const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed'>('pending');
   const [topAnnotation, setTopAnnotation] = useState('');
   const [bottomAnnotation, setBottomAnnotation] = useState('');
+  
+  // New Fields State
+  const [responsibleAgency, setResponsibleAgency] = useState('');
+  const [customAgency, setCustomAgency] = useState('');
+  const [responsibleSector, setResponsibleSector] = useState('');
+  const [customSector, setCustomSector] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [completionForecast, setCompletionForecast] = useState('');
+
+  // Dropdown Options
+  const agencies = ['Prefeitura', 'Estado', 'Governo Federal', 'Empresa Privada', 'Outro'];
+  const sectors = ['Obras', 'Planejamento', 'Finanças', 'Jurídico', 'Meio Ambiente', 'Outro'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation: Completion date cannot be before start date
+    if (startDate && completionForecast && new Date(completionForecast) < new Date(startDate)) {
+      alert('A previsão de conclusão não pode ser anterior à data de início.');
+      return;
+    }
+
     setLoading(true);
     
+    const finalAgency = responsibleAgency === 'Outro' ? customAgency : responsibleAgency;
+    const finalSector = responsibleSector === 'Outro' ? customSector : responsibleSector;
+
     const success = await onSave({
       title,
       status,
       topAnnotation: topAnnotation || undefined,
       bottomAnnotation: bottomAnnotation || undefined,
+      responsibleAgency: finalAgency,
+      responsibleSector: finalSector,
+      startDate,
+      completionForecast
     });
 
     setLoading(false);
     if (success) {
+      // Reset form
       setTitle('');
       setStatus('pending');
       setTopAnnotation('');
       setBottomAnnotation('');
+      setResponsibleAgency('');
+      setCustomAgency('');
+      setResponsibleSector('');
+      setCustomSector('');
+      setStartDate('');
+      setCompletionForecast('');
       onClose();
     }
   };
@@ -98,6 +131,71 @@ export const AddStepModal: React.FC<AddStepModalProps> = ({ isOpen, onClose, onS
                     <option value="in-progress">Em Andamento (Atual)</option>
                     <option value="completed">Concluído</option>
                   </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Órgão Responsável</label>
+                    <select
+                      value={responsibleAgency}
+                      onChange={(e) => setResponsibleAgency(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
+                    >
+                      <option value="">Selecione...</option>
+                      {agencies.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    {responsibleAgency === 'Outro' && (
+                      <input
+                        type="text"
+                        value={customAgency}
+                        onChange={(e) => setCustomAgency(e.target.value)}
+                        className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        placeholder="Especifique o órgão"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Setor Responsável</label>
+                    <select
+                      value={responsibleSector}
+                      onChange={(e) => setResponsibleSector(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
+                    >
+                      <option value="">Selecione...</option>
+                      {sectors.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    {responsibleSector === 'Outro' && (
+                      <input
+                        type="text"
+                        value={customSector}
+                        onChange={(e) => setCustomSector(e.target.value)}
+                        className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        placeholder="Especifique o setor"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Data de Início</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Previsão de Conclusão</label>
+                    <input
+                      type="date"
+                      value={completionForecast}
+                      onChange={(e) => setCompletionForecast(e.target.value)}
+                      min={startDate}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
