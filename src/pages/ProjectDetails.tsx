@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, Edit2, Check, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Check, X, User, Calendar, FileText } from 'lucide-react';
 import { Timeline } from '../components/timeline/Timeline';
 import { AddStepModal } from '../components/timeline/AddStepModal';
 import { EditStepModal } from '../components/timeline/EditStepModal';
