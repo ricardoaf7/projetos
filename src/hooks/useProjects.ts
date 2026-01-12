@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Project } from '../types';
+import { useAudit } from './useAudit';
 
-export const useProjects = () => {
+export const useProjects = (statusFilter: 'active' | 'archived' = 'active') => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { logAction } = useAudit();
 
   const fetchProjects = async () => {
     try {
@@ -15,6 +17,7 @@ export const useProjects = () => {
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
+        .eq('status', statusFilter)
         .order('created_at', { ascending: false });
 
       if (projectsError) throw projectsError;
@@ -75,9 +78,66 @@ export const useProjects = () => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [statusFilter]);
 
-  return { projects, loading, error, refetch: fetchProjects };
+  const archiveProject = async (projectId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'archived' })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      await logAction('ARCHIVE', 'PROJECT', projectId);
+      fetchProjects();
+      return true;
+    } catch (err: any) {
+      console.error('Error archiving project:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  const deleteProject = async (projectId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      await logAction('DELETE', 'PROJECT', projectId);
+      fetchProjects();
+      return true;
+    } catch (err: any) {
+      console.error('Error deleting project:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  const restoreProject = async (projectId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'active' })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      await logAction('UPDATE', 'PROJECT', projectId, { action: 'RESTORE' });
+      fetchProjects();
+      return true;
+    } catch (err: any) {
+      console.error('Error restoring project:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  return { projects, loading, error, refetch: fetchProjects, archiveProject, deleteProject, restoreProject };
 };
 
 export const useProject = (id: string | undefined) => {
