@@ -56,14 +56,14 @@ export const EditStepModal: React.FC<EditStepModalProps> = ({ isOpen, step, onCl
       setBottomAnnotation(step.bottomAnnotation || '');
       
       // Load new fields
-      if (step.responsibleAgency && !agencies.includes(step.responsibleAgency)) {
+      if (step.responsibleAgency && !agencies.some(a => a.name === step.responsibleAgency)) {
         setResponsibleAgency('Outro');
         setCustomAgency(step.responsibleAgency);
       } else {
         setResponsibleAgency(step.responsibleAgency || '');
       }
 
-      if (step.responsibleSector && !sectors.includes(step.responsibleSector)) {
+      if (step.responsibleSector && !sectors.some(s => s.name === step.responsibleSector)) {
         setResponsibleSector('Outro');
         setCustomSector(step.responsibleSector);
       } else {
