@@ -81,62 +81,101 @@ export const useProject = (id: string | undefined) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchProject = async () => {
+    try {
+      if (!id) return;
+      
+      setLoading(true);
+      setError(null);
+
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (projectError) throw projectError;
+
+      const { data: stepsData, error: stepsError } = await supabase
+        .from('project_steps')
+        .select('*')
+        .eq('project_id', id)
+        .order('order_index', { ascending: true });
+
+      if (stepsError) throw stepsError;
+
+      const formattedProject: Project = {
+        id: projectData.id,
+        title: projectData.title,
+        description: projectData.description,
+        progress: projectData.progress,
+        imageUrl: projectData.image_url || undefined,
+        steps: stepsData.map(s => ({
+          id: s.id,
+          title: s.title,
+          status: s.status,
+          isCurrent: s.is_current,
+          topAnnotation: s.top_annotation || undefined,
+          bottomAnnotation: s.bottom_annotation || undefined,
+        })),
+        currentStepDetails: projectData.current_responsible ? {
+          responsible: projectData.current_responsible,
+          deadline: projectData.current_deadline,
+          notes: projectData.current_notes
+        } : undefined
+      };
+
+      setProject(formattedProject);
+    } catch (err: any) {
+      console.error('Error fetching project:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!id) return;
-
-    const fetchProject = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const { data: projectData, error: projectError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (projectError) throw projectError;
-
-        const { data: stepsData, error: stepsError } = await supabase
-          .from('project_steps')
-          .select('*')
-          .eq('project_id', id)
-          .order('order_index', { ascending: true });
-
-        if (stepsError) throw stepsError;
-
-        const formattedProject: Project = {
-          id: projectData.id,
-          title: projectData.title,
-          description: projectData.description,
-          progress: projectData.progress,
-          imageUrl: projectData.image_url || undefined,
-          steps: stepsData.map(s => ({
-            id: s.id,
-            title: s.title,
-            status: s.status,
-            isCurrent: s.is_current,
-            topAnnotation: s.top_annotation || undefined,
-            bottomAnnotation: s.bottom_annotation || undefined,
-          })),
-          currentStepDetails: projectData.current_responsible ? {
-            responsible: projectData.current_responsible,
-            deadline: projectData.current_deadline,
-            notes: projectData.current_notes
-          } : undefined
-        };
-
-        setProject(formattedProject);
-      } catch (err: any) {
-        console.error('Error fetching project:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProject();
   }, [id]);
 
-  return { project, loading, error };
+  const addStep = async (stepData: {
+    title: string;
+    status: 'pending' | 'in-progress' | 'completed';
+    topAnnotation?: string;
+    bottomAnnotation?: string;
+  }) => {
+    if (!id || !project) return;
+
+    try {
+      // Calculate next order index
+      const maxOrder = project.steps.length > 0 
+        ? Math.max(...project.steps.map((_, i) => i + 1)) 
+        : 0;
+      
+      const { error } = await supabase
+        .from('project_steps')
+        .insert([{
+          project_id: id,
+          title: stepData.title,
+          status: stepData.status,
+          top_annotation: stepData.topAnnotation,
+          bottom_annotation: stepData.bottomAnnotation,
+          order_index: maxOrder + 1,
+          is_current: false // Default to false
+        }]);
+
+      if (error) throw error;
+      
+      // Refresh project data
+      fetchProject();
+      return true;
+    } catch (err: any) {
+      console.error('Error adding step:', err);
+      setError(err.message);
+      return false;
+    }
+  };
+
+  return { project, loading, error, addStep };
 };

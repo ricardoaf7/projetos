@@ -1,15 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, User, FileText } from 'lucide-react';
+import { ArrowLeft, Calendar, User, FileText, Plus } from 'lucide-react';
 import { Timeline } from '../components/timeline/Timeline';
+import { AddStepModal } from '../components/timeline/AddStepModal';
 import { useProject } from '../hooks/useProjects';
 
 export const ProjectDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isAddStepModalOpen, setIsAddStepModalOpen] = useState(false);
   
-  const { project, loading, error } = useProject(id);
+  const { project, loading, error, addStep } = useProject(id);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -93,15 +95,30 @@ export const ProjectDetails: React.FC = () => {
         <section className="mb-20 bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-slate-700"></div>
           
-          <div className="p-8 md:p-12 border-b border-slate-100">
-             <h3 className="text-2xl font-bold text-slate-800 mb-2">Linha do Tempo</h3>
-             <p className="text-slate-500">Acompanhamento detalhado das etapas de execução</p>
+          <div className="p-8 md:p-12 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+             <div>
+               <h3 className="text-2xl font-bold text-slate-800 mb-2">Linha do Tempo</h3>
+               <p className="text-slate-500">Acompanhamento detalhado das etapas de execução</p>
+             </div>
+             <button
+               onClick={() => setIsAddStepModalOpen(true)}
+               className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-full font-medium transition-colors text-sm shadow-lg shadow-slate-200"
+             >
+               <Plus className="w-4 h-4" />
+               Adicionar Etapa
+             </button>
           </div>
 
           <div className="bg-slate-50/50">
             <Timeline steps={project.steps} />
           </div>
         </section>
+
+        <AddStepModal 
+          isOpen={isAddStepModalOpen}
+          onClose={() => setIsAddStepModalOpen(false)}
+          onSave={addStep}
+        />
 
         {/* Current Step Details */}
         {project.currentStepDetails && (
