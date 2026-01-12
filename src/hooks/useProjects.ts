@@ -144,8 +144,8 @@ export const useProject = (id: string | undefined) => {
     status: 'pending' | 'in-progress' | 'completed';
     topAnnotation?: string;
     bottomAnnotation?: string;
-  }) => {
-    if (!id || !project) return;
+  }): Promise<boolean> => {
+    if (!id || !project) return false;
 
     try {
       // Calculate next order index
