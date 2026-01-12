@@ -3,13 +3,40 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProjectCard } from '../components/dashboard/ProjectCard';
 import { useProjects } from '../hooks/useProjects';
-import { LayoutDashboard, Bell, Search, Plus, Archive, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Bell, Search, Plus, Archive, Trash2, AlertTriangle, Loader2, PieChart, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+
+const StatCard: React.FC<{
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ElementType;
+  color: string;
+}> = ({ title, value, subtitle, icon: Icon, color }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+    <div>
+      <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+      <h3 className="text-2xl font-bold text-slate-800 mb-1">{value}</h3>
+      <p className={`text-xs font-medium ${color.replace('bg-', 'text-').replace('100', '600')}`}>{subtitle}</p>
+    </div>
+    <div className={`p-3 rounded-xl ${color}`}>
+      <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-').replace('100', '600')}`} />
+    </div>
+  </div>
+);
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const { projects, loading, error, archiveProject, deleteProject, restoreProject } = useProjects(activeTab);
   
+  // Calculate KPIs
+  const totalProjects = projects.length;
+  const completedProjects = projects.filter(p => p.progress === 100).length;
+  const inProgressProjects = projects.filter(p => p.progress > 0 && p.progress < 100).length;
+  const globalProgress = totalProjects > 0 
+    ? Math.round(projects.reduce((acc, curr) => acc + curr.progress, 0) / totalProjects) 
+    : 0;
+
   // Action States
   const [projectToDelete, setProjectToDelete] = useState<{id: string, title: string} | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -86,6 +113,45 @@ export const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-8 py-12">
+        
+        {/* KPI Section */}
+        {!loading && !error && projects.length > 0 && activeTab === 'active' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+          >
+            <StatCard 
+              title="Total de Projetos" 
+              value={totalProjects} 
+              subtitle="Em carteira ativa" 
+              icon={PieChart} 
+              color="bg-blue-100" 
+            />
+            <StatCard 
+              title="Em Andamento" 
+              value={inProgressProjects} 
+              subtitle="Execução normal" 
+              icon={Clock} 
+              color="bg-amber-100" 
+            />
+            <StatCard 
+              title="Concluídos" 
+              value={completedProjects} 
+              subtitle="Entregas realizadas" 
+              icon={CheckCircle} 
+              color="bg-emerald-100" 
+            />
+            <StatCard 
+              title="Progresso Global" 
+              value={`${globalProgress}%`} 
+              subtitle="Média ponderada" 
+              icon={TrendingUp} 
+              color="bg-indigo-100" 
+            />
+          </motion.div>
+        )}
+
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-6">
           <div className="flex-1">
             <h2 className="text-3xl font-bold text-slate-800 mb-6 tracking-tight">Projetos em Destaque</h2>

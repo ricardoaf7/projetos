@@ -63,6 +63,10 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
   }
 
   const textColor = isCurrent || isCompleted ? 'text-white font-semibold' : 'text-slate-500 font-medium';
+  const subTextColor = isCurrent || isCompleted ? 'text-white/80' : 'text-slate-400';
+
+  // Check if step is overdue
+  const isOverdue = !isCompleted && step.completionForecast && new Date(step.completionForecast) < new Date();
 
   return (
     <div 
@@ -73,16 +77,16 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
       onClick={() => onClick?.(step)}
       className="relative group flex flex-col items-center select-none"
     >
-      {/* Top Annotation */}
+      {/* Top Annotation - Agency/Sector */}
       <div className="absolute -top-16 left-0 w-full text-center px-1">
-         {step.topAnnotation && (
+         {(step.topAnnotation || step.responsibleAgency) && (
            <motion.div 
              initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
              className="flex flex-col items-center"
            >
-             <div className="text-[10px] text-slate-500 leading-tight mb-2 h-8 flex items-end justify-center w-32 mx-auto">
-               {step.topAnnotation}
+             <div className="text-[10px] text-slate-500 font-semibold leading-tight mb-2 h-8 flex items-end justify-center w-32 mx-auto uppercase tracking-wide">
+               {step.responsibleAgency ? step.responsibleAgency : step.topAnnotation}
              </div>
              <div className="w-px h-6 bg-slate-300"></div>
              <div className={cn("w-2 h-2 rounded-full", isCompleted || isCurrent ? "bg-slate-400" : "bg-slate-200")}></div>
@@ -108,7 +112,7 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
 
          <div 
            className={cn(
-             "h-14 w-40 flex items-center justify-center px-4 relative transition-all duration-300 shadow-sm",
+             "h-14 w-40 flex flex-col items-center justify-center px-4 relative transition-all duration-300 shadow-sm",
              bgClass
            )}
            style={{
@@ -117,9 +121,14 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
              ...(index === 0 ? { clipPath: "polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%)" } : {})
            }}
          >
-           <span className={cn("text-xs uppercase text-center tracking-wide", textColor)}>
+           <span className={cn("text-xs uppercase text-center tracking-wide leading-none", textColor)}>
              {step.title}
            </span>
+           {step.completionForecast && (
+             <span className={cn("text-[9px] mt-1 font-medium", isOverdue ? "text-red-500 bg-white/90 px-1 rounded" : subTextColor)}>
+               {new Date(step.completionForecast).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+             </span>
+           )}
          </div>
       </div>
 
