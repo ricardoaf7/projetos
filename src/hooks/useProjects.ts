@@ -137,13 +137,44 @@ export const useProjects = (statusFilter: 'active' | 'archived' = 'active') => {
     }
   };
 
-  return { projects, loading, error, refetch: fetchProjects, archiveProject, deleteProject, restoreProject };
+  const addProject = async (projectData: {
+    title: string;
+    description: string;
+    imageUrl?: string;
+  }): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          title: projectData.title,
+          description: projectData.description,
+          image_url: projectData.imageUrl,
+          progress: 0,
+          status: 'active'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await logAction('CREATE', 'PROJECT', data.id);
+      fetchProjects();
+      return data.id;
+    } catch (err: any) {
+      console.error('Error creating project:', err);
+      setError(err.message);
+      return null;
+    }
+  };
+
+  return { projects, loading, error, refetch: fetchProjects, archiveProject, deleteProject, restoreProject, addProject };
 };
 
 export const useProject = (id: string | undefined) => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { logAction } = useAudit();
 
   const fetchProject = async () => {
     try {
@@ -206,6 +237,29 @@ export const useProject = (id: string | undefined) => {
     if (!id) return;
     fetchProject();
   }, [id]);
+
+  const updateProjectDetails = async (updates: {
+    title?: string;
+    description?: string;
+  }): Promise<boolean> => {
+    if (!id) return false;
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await logAction('UPDATE', 'PROJECT', id, updates);
+      fetchProject();
+      return true;
+    } catch (err: any) {
+      console.error('Error updating project details:', err);
+      setError(err.message);
+      return false;
+    }
+  };
 
   const addStep = async (stepData: {
     title: string;
@@ -331,5 +385,5 @@ export const useProject = (id: string | undefined) => {
     }
   };
 
-  return { project, loading, error, addStep, updateStep, deleteStep, reorderSteps };
+  return { project, loading, error, addStep, updateStep, deleteStep, reorderSteps, updateProjectDetails };
 };

@@ -55,14 +55,14 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
   
   let bgClass = '';
   if (isCompleted) {
-    bgClass = isEarlyStage ? 'bg-emerald-400' : 'bg-slate-700';
+    bgClass = isEarlyStage ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-700 shadow-slate-200';
   } else if (isCurrent) {
-    bgClass = 'bg-lime-400';
+    bgClass = 'bg-blue-600 shadow-blue-200';
   } else {
-    bgClass = 'bg-slate-700/50';
+    bgClass = 'bg-slate-100 border border-slate-200';
   }
 
-  const textColor = isCurrent ? 'text-white font-bold' : 'text-white/90 font-medium';
+  const textColor = isCurrent || isCompleted ? 'text-white font-semibold' : 'text-slate-500 font-medium';
 
   return (
     <div 
@@ -93,12 +93,12 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
       {/* Chevron Shape */}
       <div className="relative -mr-4 z-10 filter drop-shadow-sm hover:scale-105 transition-transform">
          {isCurrent && (
-           <svg className="absolute -top-4 -left-2 w-[115%] h-[140%] z-20 pointer-events-none text-sky-400" viewBox="0 0 100 100" preserveAspectRatio="none">
+           <svg className="absolute -top-4 -left-2 w-[115%] h-[140%] z-20 pointer-events-none text-blue-400 opacity-50" viewBox="0 0 100 100" preserveAspectRatio="none">
              <motion.path
                d="M10,50 Q20,5 50,10 Q90,5 95,50 Q90,95 50,90 Q10,95 10,50"
                fill="none"
                stroke="currentColor"
-               strokeWidth="2"
+               strokeWidth="1"
                initial={{ pathLength: 0 }}
                animate={{ pathLength: 1 }}
                transition={{ duration: 1, ease: "easeInOut" }}
@@ -108,7 +108,7 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
 
          <div 
            className={cn(
-             "h-16 w-44 flex items-center justify-center px-6 relative transition-colors duration-300",
+             "h-14 w-40 flex items-center justify-center px-4 relative transition-all duration-300 shadow-sm",
              bgClass
            )}
            style={{
