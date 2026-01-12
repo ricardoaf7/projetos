@@ -10,6 +10,10 @@ interface AddStepModalProps {
     status: 'pending' | 'in-progress' | 'completed';
     topAnnotation?: string;
     bottomAnnotation?: string;
+    responsibleAgency?: string;
+    responsibleSector?: string;
+    startDate?: string;
+    completionForecast?: string;
   }) => Promise<boolean>;
 }
 
