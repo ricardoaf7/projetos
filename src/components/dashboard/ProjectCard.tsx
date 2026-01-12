@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Building2, Calendar, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Building2, Calendar } from 'lucide-react';
 import { Project } from '../../types';
 
 interface ProjectCardProps {
