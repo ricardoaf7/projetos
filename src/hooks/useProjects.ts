@@ -223,22 +223,21 @@ export const useProject = (id: string | undefined) => {
 
   const reorderSteps = async (orderedStepIds: string[]): Promise<boolean> => {
     try {
-      // Create updates for each step with new order_index
-      const updates = orderedStepIds.map((id, index) => ({
-        id,
-        project_id: project?.id, // Required for upsert in some cases, good practice
-        order_index: index + 1
-      }));
+      // Use Promise.all to update each step individually to avoid NOT NULL constraints on other columns
+      // when using upsert with incomplete data
+      const updates = orderedStepIds.map((id, index) => 
+        supabase
+          .from('project_steps')
+          .update({ order_index: index + 1 })
+          .eq('id', id)
+      );
 
-      // Supabase upsert can handle bulk updates if we include primary keys
-      const { error } = await supabase
-        .from('project_steps')
-        .upsert(updates, { onConflict: 'id' }); // Only update existing rows
-
+      const results = await Promise.all(updates);
+      
+      // Check for errors
+      const error = results.find(r => r.error)?.error;
       if (error) throw error;
       
-      // Optimistically update local state or refetch
-      // For now, refetch to be safe
       fetchProject();
       return true;
     } catch (err: any) {
