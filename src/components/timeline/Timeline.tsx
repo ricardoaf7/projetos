@@ -68,6 +68,14 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
   // Check if step is overdue
   const isOverdue = !isCompleted && step.completionForecast && new Date(step.completionForecast) < new Date();
 
+  // Helper function to format date correctly considering timezone
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  };
+
   return (
     <div 
       ref={setNodeRef} 
@@ -85,8 +93,17 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
              animate={{ opacity: 1, y: 0 }}
              className="flex flex-col items-center"
            >
-             <div className="text-[10px] text-slate-500 font-semibold leading-tight mb-2 h-8 flex items-end justify-center w-32 mx-auto uppercase tracking-wide">
-               {step.responsibleAgency ? step.responsibleAgency : step.topAnnotation}
+             <div className="text-[10px] text-slate-500 font-semibold leading-tight mb-2 h-8 flex flex-col items-center justify-end w-40 mx-auto uppercase tracking-wide">
+               {step.responsibleAgency ? (
+                 <>
+                   <span>{step.responsibleAgency}</span>
+                   {step.responsibleSector && (
+                     <span className="text-[8px] opacity-75 font-normal">{step.responsibleSector}</span>
+                   )}
+                 </>
+               ) : (
+                 step.topAnnotation
+               )}
              </div>
              <div className="w-px h-6 bg-slate-300"></div>
              <div className={cn("w-2 h-2 rounded-full", isCompleted || isCurrent ? "bg-slate-400" : "bg-slate-200")}></div>
@@ -126,7 +143,7 @@ const SortableStep = ({ step, index, onClick }: SortableStepProps) => {
            </span>
            {step.completionForecast && (
              <span className={cn("text-[9px] mt-1 font-medium", isOverdue ? "text-red-500 bg-white/90 px-1 rounded" : subTextColor)}>
-               {new Date(step.completionForecast).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+               {formatDate(step.completionForecast)}
              </span>
            )}
          </div>
